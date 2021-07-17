@@ -1,0 +1,9 @@
+{
+    "workbench.editor.enablePreview": true,
+    "python.languageServer": "Pylance",
+    "settingsSync.ignoredExtensions": [
+    ],
+    "python.linting.flake8Args": [
+        "--ignore=E501,E302,E305,E402"
+    ]
+}

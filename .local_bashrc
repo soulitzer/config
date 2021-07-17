@@ -1,0 +1,26 @@
+#!/bin/bash
+
+source $HOME/local/.local_bash_utils  # utilities
+source $HOME/local/install/.local_ldlib_exports
+source $HOME/local/install/.local_path_exports
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Aliases
+#
+alias epf="vi +10 ~/local/.local_bashrc"
+alias epfu="vi ~/local/.local_bash_utils"
+alias spf="source ~/.bashrc"
+alias clean="python setup.py clean"
+alias gist="gh gist create --public"
+alias gsuir="git submodule update --init --recursive"
+alias vpf="vim ~/.vimrc"
+alias c="cat -"
+
+alias b="USE_CUDA=0 python3 setup.py develop"
+alias bb="USE_CUDA=1 python3 setup.py develop"
+alias bd="USE_CUDA=0 DEBUG=1 python3 setup.py develop"
+
+alias cpperr="TORCH_SHOW_CPP_STACKTRACES=1"
+alias pp="ps aux | grep python | grep 'adapter-access-token' | awk '{ print \$2 }'"
+alias co="git checkout"
+alias com="git checkout master"

@@ -1,0 +1,176 @@
+#!/bin/bash
+function confirm()
+{
+  msg=$([ "$#" -ne "0" ] && echo "'$@' " || echo "")
+  read -p "Confirm $msg(y/n)? " answer
+  for response in y Y
+  do
+    if [ "_$answer" == "_$response" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Branch management
+#
+function mkbr {
+  git checkout -b "$1"
+  echo 'git fetch upstream master'
+  git fetch upstream master
+  if git fetch upstream master; then
+    echo "Fetch successful"
+  else
+    echo "git fetch origin master"
+    git fetch origin master
+  fi
+  echo "git rebase upstream/master"
+  if git rebase upstream/master; then
+    echo "Rebase successful"
+  else
+    git rebase origin/master
+  fi
+  echo "git submodule update --init --recursive"
+  gsuir
+  echo "Setup complete! You probably want to build now. "
+}
+
+function rmbr {
+  for branch in $@
+  do
+    git branch -D "$branch"
+    git push -d origin "$branch"
+  done
+}
+
+export -f rmbr # Export so that 'bash -c' can use it
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Profiles
+#
+function cd1 {
+  cd $HOME/local/pytorch1
+  conda activate pytorch1
+  export _current_profile=1
+}
+function cd2 {
+  cd $HOME/local/pytorch2
+  conda activate pytorch2
+  export _current_profile=2
+}
+function cd3 {
+  cd $HOME/local/pytorch3
+  conda activate pytorch3
+  export _current_profile=3
+}
+function cd4 {
+  cd $HOME/local/pytorch4
+  conda activate pytorch4
+  export _current_profile=4
+}
+
+_tst1="$HOME/local/.tests/tst1.py"
+_tst2="$HOME/local/.tests/tst2.py"
+_tst3="$HOME/local/.tests/tst3.py"
+_tst4="$HOME/local/.tests/tst4.py"
+
+# On 'source .bash_profile' return to current profile directory
+case $_current_profile in
+  1) cd1 ;;
+  2) cd2 ;;
+  3) cd3 ;;
+  4) cd4 ;;
+  *) cd ;;
+esac
+
+function t {
+  case $_current_profile in
+    1) python "$_tst1" ;;
+    2) python "$_tst2" ;;
+    3) python "$_tst3" ;;
+    4) python "$_tst4" ;;
+    *) cd ;;
+  esac
+}
+
+alias t1="python $_tst1"
+alias t2="python $_tst2"
+alias t3="python $_tst3"
+alias t4="python $_tst4"
+
+alias et1="code $_tst1"
+alias et2="code $_tst2"
+alias et3="code $_tst3"
+alias et4="code $_tst4"
+
+
+function et {
+  case "$_current_profile" in
+    1) code "$_tst1" ;;
+    2) code "$_tst2" ;;
+    3) code "$_tst3" ;;
+    4) code "$_tst4" ;;
+    *) cd ;;
+  esac
+}
+
+function maybe_arrow {
+  arrow=$([ "$saved_profile" == "$_current_profile" ] && echo ">>> " || echo "")
+  echo "$arrow"
+}
+
+function ss {
+  saved_profile=$_current_profile
+  cd1
+  echo "1) $(maybe_arrow)$(git branch --show-current)"
+  cd - > /dev/null
+  cd2
+  echo "2) $(maybe_arrow)$(git branch --show-current)"
+  cd - > /dev/null
+  cd3
+  echo "3) $(maybe_arrow)$(git branch --show-current)"
+  cd - > /dev/null
+  cd4
+  echo "4) $(maybe_arrow)$(git branch --show-current)"
+  cd - > /dev/null
+}
+
+function s {
+  # Compiled with CUDA
+  { cat build/CMakeCache.txt | grep "USE_CUDA:BOOL=1" ; } >/dev/null 2>&1
+  if (( $? != 0 ))
+  then
+    { cat build/CMakeCache.txt | grep "USE_CUDA:BOOL=0" ; } >/dev/null 2>&1
+    if (( $? != 0 ))
+    then
+      echo "Could not find pattern USE_CUDA:BOOL= in build/CMakeCache.txt"
+    else
+      echo "CUDA: NO"
+    fi
+  else
+    echo "CUDA: YES"
+  fi
+  # Current branch
+  echo "Branch: $(git branch --show-current)"
+  # Test if we can import torch. This is slow!
+  python -c "import torch" > /dev/null 2>&1
+  if [ $? -eq 0 ]
+  then
+    echo "Can import"
+  else
+    echo "Cannot import"
+  fi
+}
+
+function cmds {
+  echo "1) git branch | xargs -L1 -p bash -c 'delbr \"\$@\"' --"
+  echo "2) git clean -xfd && git submodule foreach git clean -xfd"
+  read -r -p "Select an option (1 or 2): " option
+  case $option in
+    1) confirm "1" && git branch | xargs -L1 -p bash -c 'delbr "$@"' -- ;;
+    2) confirm "2" && git clean -xfd && git submodule foreach git clean -xfd ;;
+    *) echo "Invalid option!" ;;
+  esac
+}
+

@@ -1,0 +1,12 @@
+*.swp
+
+tmp/
+.tests/
+install/
+
+pytorch*/
+tutorials/
+pybind11/
+
+# ccache
+ccache_log.txt
